@@ -3,11 +3,12 @@ from argparse import ArgumentParser
 
 from polars import scan_csv, LazyFrame
 
+from databases import MySQLConnector
+
 
 def convert_csv_to_df(
     file_path: str,
     seperator: str,
-    file_has_headers: bool,
     ignore_file_errors: bool,
     n_rows_to_consider: int,
 ) -> LazyFrame:
@@ -16,7 +17,6 @@ def convert_csv_to_df(
     Args:
         file_path (str): Absolute path to the file
         seperator (str): Column seperator
-        file_has_headers (bool): File have headers to consider
         ignore_file_errors (bool): Try to keep reading lines if some lines yield errors
         n_rows_to_consider (int): Number of rows to consider
 
@@ -26,7 +26,6 @@ def convert_csv_to_df(
     file_to_df = scan_csv(
         source=file_path,
         separator=seperator,
-        has_header=file_has_headers,
         ignore_errors=ignore_file_errors,
         n_rows=n_rows_to_consider,
     )
@@ -52,19 +51,20 @@ def validate_file(file_path: Path) -> None:
         raise TypeError(f"Input file type => '{file_path.suffix}' is not supprted")
 
 
-def blue_print(
+def ingest_data_from_file(
     file_path: str,
     target_database: str,
     db_host: str,
     db_port: int,
     db_user: str,
     db_password: str,
+    data_db: str,
+    data_table: str,
     file_seperator: str,
-    file_has_header: bool,
     ignore_file_errors: bool,
-    n_rows_to_consider: int,
+    n_rows_to_insert: int,
 ) -> None:
-    """_summary_
+    """Main method to access to instantiate the functionality
 
     Args:
         file_path (str): Absolute path to the file
@@ -73,27 +73,39 @@ def blue_print(
         db_port (int): Port number to connect to the database
         db_user (str): Database username for authentication
         db_password (str): Database password for authentication
+        data_db (str): Target database name to store data
+        data_table (str): Target table name to store data
         file_seperator (str): Column seperator
-        file_has_header (bool): File have headers to consider
         ignore_file_errors (bool): Try to keep reading lines if some lines yield errors
         n_rows_to_consider (int): Number of rows to consider
     """
+
+    # create connector with appropriate database driver
+    if target_database == "mysql":
+        database_class = MySQLConnector(
+            host=db_host,
+            port=db_port,
+            user=db_user,
+            password=db_password,
+            database=data_db,
+        )
 
     # validate file path and extension
     validate_file(Path(file_path))
 
     # read as dataframe
-    _dataframe = convert_csv_to_df(
+    dataframe = convert_csv_to_df(
         file_path=file_path,
         seperator=file_seperator,
-        file_has_headers=file_has_header,
         ignore_file_errors=ignore_file_errors,
-        n_rows_to_consider=n_rows_to_consider,
+        n_rows_to_consider=n_rows_to_insert,
     )
 
     # pass to query builder to insert
+    # considered there are no change in field names and field datatypes
+    database_class.insert_data(table_name=data_table, data_df=dataframe.collect())
 
-    ...
+    return None
 
 
 def main():
@@ -108,7 +120,7 @@ def main():
         help="Absolute path of the file to be uploaded, with suffix",
     )
     arg_parser.add_argument(
-        "database",
+        "database_engine",
         metavar="Target-database",
         help="Target database where the file has to be uploaded",
         choices=["mysql"],
@@ -130,16 +142,14 @@ def main():
     arg_parser.add_argument(
         "--password", help="Password for database authentication", required=True
     )
+    arg_parser.add_argument("--database", help="Target database", required=True)
+    arg_parser.add_argument(
+        "--table", help="Target table to insert the data", required=True
+    )
 
     # file_parameters
     arg_parser.add_argument(
         "--seperator", default=",", help="Column seperator in the file"
-    )
-    arg_parser.add_argument(
-        "--has_header",
-        default=True,
-        help="Indicate the file contains header. default value -> True",
-        type=bool,
     )
     arg_parser.add_argument(
         "--ignore_errors",
@@ -155,15 +165,16 @@ def main():
 
     parameters = arg_parser.parse_args()
 
-    blue_print(
+    ingest_data_from_file(
         file_path=parameters.source_file,
-        target_database=parameters.database,
+        target_database=parameters.database_engine,
         db_host=parameters.host,
         db_user=parameters.user,
         db_port=parameters.port,
         db_password=parameters.password,
+        data_db=parameters.database,
+        data_table=parameters.table,
         file_seperator=parameters.seperator,
-        file_has_header=parameters.has_header,
         ignore_file_errors=parameters.ignore_errors,
         n_rows_to_insert=parameters.n_rows,
     )
