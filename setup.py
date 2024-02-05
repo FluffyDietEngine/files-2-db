@@ -23,7 +23,7 @@ setup(
         'Programming Language :: Python',
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
-        "Intended Audience :: Data Engineers",
+        "Intended Audience :: Developers",
     ],
     packages=find_packages('src'),
     package_dir={"":"src"},
