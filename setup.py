@@ -9,7 +9,7 @@ DESCRIPTION = (HERE / "README.md").read_text()
 
 setup(
     name = 'files2db',
-    version = '0.1.0',
+    version = '0.1.1',
     description = 'Migration from local files to database made simple!',
     long_description = DESCRIPTION,
     long_description_content_type="text/markdown",
