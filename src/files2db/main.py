@@ -3,8 +3,7 @@ from argparse import ArgumentParser
 
 from polars import scan_csv, LazyFrame
 
-from databases import MySQLConnector
-
+from files2db.databases import MySQLConnector
 
 def convert_csv_to_df(
     file_path: str,

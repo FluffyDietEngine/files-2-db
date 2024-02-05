@@ -1,5 +1,5 @@
 import pathlib
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # The directory containing this file
 HERE = pathlib.Path(__file__).parent
@@ -25,11 +25,12 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Intended Audience :: Data Engineers",
     ],
-    packages=["src"],
+    packages=find_packages('src'),
+    package_dir={"":"src"},
     include_package_data=True,
     entry_points={
         "console_scripts":[
-            "files-2-db=src.main:main",
+            "files-2-db=files2db.main:main",
         ]
     },
     keywords='data-migration, mysql, csv, data-engineering, automation',
