@@ -1,4 +1,9 @@
 ## files-2-db
+<p align="left">
+  <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/FluffyDietEngine/files-2-db"/>
+  <img alt="Github Last Commit" src="https://img.shields.io/github/last-commit/FluffyDietEngine/files-2-db"/>
+  <img alt="Github Contributors" src="https://img.shields.io/github/contributors/FluffyDietEngine/files-2-db"/>
+</p>
 
 Uploading data from files to database made easy! 
 
